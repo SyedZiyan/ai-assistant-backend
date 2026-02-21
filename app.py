@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
+from openai import OpenAI
+import os
 
 app = Flask(__name__)
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
@@ -11,10 +15,18 @@ def chat():
     data = request.json
     user_message = data.get("message")
 
-    # Temporary AI response
-    response = f"You said: {user_message}"
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=user_message
+        )
 
-    return jsonify({"reply": response})
+        reply = response.output[0].content[0].text
+
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        return jsonify({"reply": f"Error: {str(e)}"})
 
 if __name__ == "__main__":
     app.run()
