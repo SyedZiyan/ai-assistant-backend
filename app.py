@@ -1,19 +1,32 @@
 from flask import Flask, request, jsonify
-from openai import OpenAI
 from flask_cors import CORS
+from openai import OpenAI
 import os
 
 app = Flask(__name__)
-CORS(APP)
+CORS(app)
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Get API key safely
+api_key = os.environ.get("OPENAI_API_KEY")
 
+if api_key:
+    client = OpenAI(api_key=api_key)
+else:
+    client = None
+    print("WARNING: OPENAI_API_KEY not set!")
+
+# Root route
 @app.route("/")
 def home():
     return "AI Assistant Backend Running!"
 
+# Chat route
 @app.route("/chat", methods=["POST"])
 def chat():
+
+    if client is None:
+        return jsonify({"reply": "API key not configured properly on server"})
+
     data = request.json
     user_message = data.get("message")
 
